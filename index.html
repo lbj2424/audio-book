@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Audiobook Player</title>
     <style>
-        /* iOS-style aesthetics */
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
@@ -29,13 +28,13 @@
         h2 {
             font-weight: 600;
             margin-bottom: 20px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--secondary-text);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* Input Area Styling */
+        /* Input Area */
         .input-group {
             width: 100%;
             max-width: 400px;
@@ -53,6 +52,7 @@
             color: white;
             font-size: 16px;
             outline: none;
+            -webkit-appearance: none; /* Removes iOS shadow */
         }
 
         input:focus {
@@ -69,7 +69,7 @@
             cursor: pointer;
         }
 
-        /* Video Container - Responsive 16:9 */
+        /* Video Container */
         .video-container {
             position: relative;
             width: 100%;
@@ -79,7 +79,7 @@
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .video-container iframe, .video-container div {
@@ -90,17 +90,17 @@
             height: 100%;
         }
 
-        /* Control Buttons */
+        /* Controls Area */
         .controls {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: space-evenly; /* Better spacing */
             width: 100%;
-            max-width: 350px;
+            max-width: 380px;
             background: var(--card-bg);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 25px 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         button.control {
@@ -108,35 +108,53 @@
             color: var(--text);
             border: none;
             cursor: pointer;
-            font-size: 24px; /* Big icons */
-            padding: 10px;
-            border-radius: 50%;
-            transition: background 0.2s;
-            width: 60px;
-            height: 60px;
             display: flex;
+            flex-direction: column; /* Stacks icon on top of text */
             align-items: center;
             justify-content: center;
+            width: 60px;
+            gap: 5px; /* Space between arrow and number */
         }
 
-        button.control:active {
-            background: rgba(255,255,255,0.1);
-            transform: scale(0.95);
+        button.control svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--text);
         }
 
+        button.control span {
+            font-size: 12px;
+            color: var(--secondary-text);
+            font-weight: 500;
+        }
+
+        /* Play Button Special Styling */
         button.play-btn {
             background: var(--primary);
             color: #000;
-            font-size: 32px;
-            width: 70px;
-            height: 70px;
+            border-radius: 50%;
+            width: 75px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-shadow: 0 4px 15px rgba(187, 134, 252, 0.4);
+            margin: 0 15px; /* Adds space around play button */
+        }
+        
+        button.play-btn svg {
+            stroke: #000;
+            fill: #000;
+            width: 30px;
+            height: 30px;
+            margin-left: 4px; /* Optically centers the triangle */
         }
 
         #status {
-            margin-top: 20px;
+            margin-top: 25px;
             color: var(--secondary-text);
-            font-size: 14px;
+            font-size: 13px;
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -155,17 +173,17 @@
 
     <div class="controls">
         <button class="control" onclick="seek(-30)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-9-9 9-9"/><path d="M22 17l-9-9 9-9"/></svg>
-            <span style="font-size:12px; position:absolute; bottom:2px;">-30</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-9-9 9-9"/><path d="M22 17l-9-9 9-9"/></svg>
+            <span>-30s</span>
         </button>
 
-        <button class="control play-btn" onclick="togglePlay()">
-            ►
+        <button class="play-btn" onclick="togglePlay()">
+             <svg viewBox="0 0 24 24" stroke-width="0"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
 
         <button class="control" onclick="seek(30)">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l9-9-9-9"/><path d="M2 17l9-9-9-9"/></svg>
-             <span style="font-size:12px; position:absolute; bottom:2px;">+30</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l9-9-9-9"/><path d="M2 17l9-9-9-9"/></svg>
+             <span>+30s</span>
         </button>
     </div>
     
@@ -183,7 +201,6 @@
 
         function onYouTubeIframeAPIReady() {
             if(currentVideoId) {
-                // Don't auto-populate input to keep it clean, just load player
                 startPlayer(currentVideoId);
             }
         }
@@ -200,7 +217,7 @@
                 } else {
                     startPlayer(videoId);
                 }
-                document.getElementById('ytLink').value = ''; // Clear input after loading
+                document.getElementById('ytLink').value = ''; 
             } else {
                 alert("Invalid YouTube Link");
             }
@@ -217,7 +234,7 @@
                 height: '100%',
                 width: '100%',
                 videoId: id,
-                playerVars: { 'playsinline': 1, 'controls': 0 }, // Hide default YT controls
+                playerVars: { 'playsinline': 1, 'controls': 0 },
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -226,7 +243,7 @@
         }
 
         function onPlayerReady(event) {
-            document.getElementById('status').innerText = "Saved at: " + formatTime(savedTime);
+            document.getElementById('status').innerText = "Resumed at: " + formatTime(savedTime);
             event.target.seekTo(savedTime);
         }
 
