@@ -52,7 +52,7 @@
             color: white;
             font-size: 16px;
             outline: none;
-            -webkit-appearance: none; /* Removes iOS shadow */
+            -webkit-appearance: none; 
         }
 
         input:focus {
@@ -94,7 +94,7 @@
         .controls {
             display: flex;
             align-items: center;
-            justify-content: space-evenly; /* Better spacing */
+            justify-content: space-evenly; 
             width: 100%;
             max-width: 380px;
             background: var(--card-bg);
@@ -109,11 +109,11 @@
             border: none;
             cursor: pointer;
             display: flex;
-            flex-direction: column; /* Stacks icon on top of text */
+            flex-direction: column; 
             align-items: center;
             justify-content: center;
             width: 60px;
-            gap: 5px; /* Space between arrow and number */
+            gap: 5px; 
         }
 
         button.control svg {
@@ -139,15 +139,21 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 15px rgba(187, 134, 252, 0.4);
-            margin: 0 15px; /* Adds space around play button */
+            margin: 0 15px; 
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
         }
         
+        button.play-btn:active {
+            transform: scale(0.95);
+        }
+
         button.play-btn svg {
-            stroke: #000;
-            fill: #000;
             width: 30px;
             height: 30px;
-            margin-left: 4px; /* Optically centers the triangle */
+            fill: #000; /* For triangle */
+            stroke: #000; /* For pause bars */
         }
 
         #status {
@@ -177,7 +183,7 @@
             <span>-30s</span>
         </button>
 
-        <button class="play-btn" onclick="togglePlay()">
+        <button class="play-btn" id="mainPlayBtn" onclick="togglePlay()">
              <svg viewBox="0 0 24 24" stroke-width="0"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
 
@@ -198,6 +204,10 @@
         var player;
         var currentVideoId = localStorage.getItem('savedVideoId') || '';
         var savedTime = localStorage.getItem('savedTime') || 0;
+
+        // SVG Icons
+        const playIcon = '<svg viewBox="0 0 24 24" stroke-width="0"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>';
+        const pauseIcon = '<svg viewBox="0 0 24 24" stroke-width="0" fill="#000"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
 
         function onYouTubeIframeAPIReady() {
             if(currentVideoId) {
@@ -234,7 +244,8 @@
                 height: '100%',
                 width: '100%',
                 videoId: id,
-                playerVars: { 'playsinline': 1, 'controls': 0 },
+                // CHANGED: controls: 1 brings back the red scrubber line
+                playerVars: { 'playsinline': 1, 'controls': 1 }, 
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -248,11 +259,24 @@
         }
 
         function onPlayerStateChange(event) {
+            var btn = document.getElementById('mainPlayBtn');
+            
             if (event.data == YT.PlayerState.PLAYING) {
-                setInterval(function(){
+                // Video is playing -> Show Pause Icon
+                btn.innerHTML = pauseIcon;
+                
+                // Start saving timer
+                window.saveInterval = setInterval(function(){
                     var currentTime = player.getCurrentTime();
                     localStorage.setItem('savedTime', currentTime);
                 }, 5000);
+            } 
+            else {
+                // Video is paused/ended -> Show Play Icon
+                btn.innerHTML = playIcon;
+                
+                // Stop saving timer
+                clearInterval(window.saveInterval);
             }
         }
 
@@ -263,7 +287,7 @@
 
         function togglePlay() {
             var state = player.getPlayerState();
-            if(state == 1) {
+            if(state == 1) { // 1 = Playing
                 player.pauseVideo();
             } else {
                 player.playVideo();
