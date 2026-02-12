@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audiobook Keeper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
+        input { padding: 10px; width: 80%; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;}
+        button { padding: 15px 20px; font-size: 16px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 8px; }
+        button.control { background: #333; }
+        #player { margin-top: 20px; width: 100%; max-width: 600px; height: 340px; }
+    </style>
+</head>
+<body>
+
+    <h2>My Audiobook Player</h2>
+    <input type="text" id="ytLink" placeholder="Paste YouTube Link Here">
+    <button onclick="loadVideo()">Load Video</button>
+    
+    <div id="player"></div>
+
+    <div style="margin-top:20px;">
+        <button class="control" onclick="seek(-30)">⏪ 30s</button>
+        <button class="control" onclick="togglePlay()">⏯ Play/Pause</button>
+        <button class="control" onclick="seek(30)">30s ⏩</button>
+    </div>
+    
+    <p id="status">Status: Waiting...</p>
+
+    <script>
+        // Load the IFrame Player API code asynchronously.
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        var currentVideoId = localStorage.getItem('savedVideoId') || '';
+        var savedTime = localStorage.getItem('savedTime') || 0;
+
+        function onYouTubeIframeAPIReady() {
+            if(currentVideoId) {
+                document.getElementById('ytLink').value = "https://youtu.be/" + currentVideoId;
+                startPlayer(currentVideoId);
+            }
+        }
+
+        function loadVideo() {
+            var url = document.getElementById('ytLink').value;
+            var videoId = extractVideoID(url);
+            if(videoId) {
+                currentVideoId = videoId;
+                localStorage.setItem('savedVideoId', videoId);
+                localStorage.setItem('savedTime', 0); // Reset time for new book
+                if(player) {
+                    player.loadVideoById(videoId);
+                } else {
+                    startPlayer(videoId);
+                }
+            } else {
+                alert("Invalid YouTube Link");
+            }
+        }
+
+        function extractVideoID(url) {
+            var regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            var match = url.match(regExp);
+            return (match && match[2].length == 11) ? match[2] : null;
+        }
+
+        function startPlayer(id) {
+            player = new YT.Player('player', {
+                height: '390',
+                width: '640',
+                videoId: id,
+                playerVars: { 'playsinline': 1 }, // Important for mobile!
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            document.getElementById('status').innerText = "Resuming from " + formatTime(savedTime);
+            event.target.seekTo(savedTime);
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.PLAYING) {
+                // Save progress every 5 seconds while playing
+                setInterval(function(){
+                    var currentTime = player.getCurrentTime();
+                    localStorage.setItem('savedTime', currentTime);
+                }, 5000);
+            }
+        }
+
+        // Custom Controls
+        function seek(seconds) {
+            var currentTime = player.getCurrentTime();
+            player.seekTo(currentTime + seconds);
+        }
+
+        function togglePlay() {
+            var state = player.getPlayerState();
+            if(state == 1) player.pauseVideo();
+            else player.playVideo();
+        }
+        
+        function formatTime(seconds) {
+             return new Date(seconds * 1000).toISOString().substr(11, 8);
+        }
+    </script>
+</body>
+</html>
